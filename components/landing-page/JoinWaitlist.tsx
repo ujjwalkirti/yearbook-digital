@@ -6,10 +6,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { db } from "@/loaders/firebase";
-import { collection, doc, setDoc } from "firebase/firestore";
 import React from "react";
-import { FirebaseError } from "firebase/app";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -28,16 +25,26 @@ function JoinWaitlist() {
 	async function onSubmit(values: z.infer<typeof schema>) {
 		try {
 			setIsFormSubmitting(true);
-			const newEmailRef = doc(collection(db, "emails"));
-			await setDoc(newEmailRef, { email: values.email });
+			const response = await fetch("/api/join-waitlist", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(values),
+			});
+
+			if (!response.ok) {
+				toast("Something went wrong. Please try again later.", {
+					description: "We'll be in touch soon.",
+					position: "bottom-right",
+				});
+			}
+
 			toast("Thanks for joining our waitlist!", {
 				description: "We'll be in touch soon.",
 				position: "bottom-right",
 			});
 		} catch (error) {
-			if (error instanceof FirebaseError) {
-				console.log(error.message);
-			}
 			toast("Something went wrong. Please try again later.", {
 				description: "We'll be in touch soon.",
 				position: "bottom-right",
